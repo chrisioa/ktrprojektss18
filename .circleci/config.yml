@@ -13,8 +13,8 @@ jobs:
           name: Build base onos image
           command: make onos
       - run:
-          name: Push base onos image
-          command:  docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS && docker push -chrisioa/myonosbase
+          name: Push
+          command:  docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS && docker push chrisioa/myonosbase
 
   build_amd64:
     <<: *defaults
@@ -28,7 +28,7 @@ jobs:
           command: make ARCHITECTURES=amd64 test
       - deploy:
           name: Push image for amd64 to dockerhub
-          command: make DOCKERHUB_PASS=$DOCKERHUB_PASS ARCHITECTURES=amd64 push
+          command: docker login -u "$DOCKERHUB_USER" -p $DOCKERHUB_PASS && make ARCHITECTURES=amd64 push
   
   build_arm32v7:
     <<: *defaults
@@ -39,7 +39,7 @@ jobs:
           command: make ARCHITECTURES=arm32v7
       - deploy:
           name: Push image for arm32v7 to dockerhub
-          command: make DOCKERHUB_PASS=$DOCKERHUB_PASS ARCHITECTURES=arm32v7 push
+          command: docker login -u "$DOCKERHUB_USER" -p "$DOCKERHUB_PASS" && make ARCHITECTURES=arm32v7 push
 
   manifest:
     <<: *defaults
@@ -47,7 +47,7 @@ jobs:
       - checkout
       - deploy:
           name: Generate multiarch manifest and push to dockerhub
-          command: make manifest
+          command: docker login -u "$DOCKERHUB_USER" -p "$DOCKERHUB_PASS" && make manifest
 
 requires_build: &requires_build
   requires:
