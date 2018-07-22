@@ -1,0 +1,20 @@
+ docker attach <container_name>
+ docker exec -it docker_onos_1 /bin/sh
+
+ /opt/onos/bin/onos/ -l <userName> -b <Address>
+
+ In the onos docker :
+ /root/onos/bin/onos-app 192.168.16.99 reinstall! de.uniba.ktr.ioannidis.onosApp /data/onosApp-0.0.1-SNAPSHOT.oar
+ 
+ mininet> h1 python -m SimpleHTTPServer 80 &
+ mininet> h2 dig @10.0.0.1 +time=1 +tries=1 +short magiccookie
+ 
+docker plugin install hub.ktr.uni-bamberg.de/ovs_plugin:latest
+
+
+#Run gitlab-runner locally
+ sudo gitlab-runner exec docker --docker-privileged build_image_amd64
+
+
+#Run in foreign environment with quemu-*-static binary installed
+docker run -it --rm -v /usr/bin/qemu-arm-static:/usr/bin/qemu-arm-static chrisioa/myonostest:linux-arm32v7-0.0.1

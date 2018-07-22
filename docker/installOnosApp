@@ -1,0 +1,6 @@
+#!/bin/bash
+cp ../onosApp/ioannidis.onosApp/target/ioannidis.onosApp-0.0.1.oar rundata/onos/data/ioannidis.onosApp-0.0.1.oar
+#
+docker exec docker_onos_1 /root/onos/bin/onos-app 192.168.16.99 install /data/ioannidis.onosApp-0.0.1.oar 
+#If already installed
+docker exec docker_onos_1 /root/onos/bin/onos-app 192.168.16.99 reinstall de.uniba.ktr.ioannidis.onosApp /data/ioannidis.onosApp-0.0.1.oar 

@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#start ovs dependencies if not running
+if(!(systemctl -q is-active ovs-vswitchd))
+ then
+  docker/start
+ fi
+ 
+#Start mininet and onos container
+docker-compose -f docker/docker-compose.yml up &
+sleep 10s
+
+#connect to mininet
+konsole --separate --hold -e 'docker attach docker_mininet_1' &
+
+#connect to onos
+konsole --separate --hold -e 'docker exec -it docker_onos_1 /bin/sh' &
+konsole --separate --hold -e 'ssh 127.0.0.1 -p 8101 -l karaf' &

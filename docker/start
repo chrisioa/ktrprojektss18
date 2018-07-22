@@ -1,0 +1,4 @@
+#!/bin/bash
+
+systemctl start ovs-vswitchd
+systemctl start ovsdb-server
