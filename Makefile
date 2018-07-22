@@ -40,7 +40,7 @@ onos:
 
 	
 push:
-	@docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
+	@docker login -u $(DOCKERHUB_USER) -p $(DOCKERHUB_PASS)
 	@$(foreach arch,$(ARCHITECTURES), docker push $(REPO):linux-$(arch)-$(TAG);)
 	@docker logout
 			
