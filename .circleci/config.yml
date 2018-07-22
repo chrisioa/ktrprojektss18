@@ -49,13 +49,19 @@ jobs:
           name: Generate multiarch manifest and push to dockerhub
           command: make manifest
 
+requires_build: &requires_build
+  requires:
+    - build
+          
 workflows:
   version: 2
   build-and-deploy:
     jobs:
       - build
-      - build_amd64
-      - build_arm32v7
+      - build_amd64:
+          <<: *requires_build
+      - build_arm32v7:
+          <<: *requires_build
       - manifest:
           requires:
             - build

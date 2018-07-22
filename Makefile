@@ -3,8 +3,8 @@ IMAGE_TARGET = openjdk:8-jre-slim
 MULTIARCH = multiarch/qemu-user-static:register
 QEMU_VERSION = v2.11.0
 VERSION = $(shell cat VERSION)
-DOCKERHUB_USER=chrisioa
-DOCKERHUB_PASS=test
+# DOCKERHUB_USER=chrisioa
+# DOCKERHUB_PASS=test
 CI_REGISTRY=docker.io
 CI_REGISTRY_IMAGE=docker.io/chrisia/myonos
   
@@ -40,6 +40,7 @@ onos:
 
 	
 push:
+	@docker login -u $(DOCKER_USER) -p $(DOCKER_PASS)
 	@$(foreach arch,$(ARCHITECTURES), docker push $(REPO):linux-$(arch)-$(TAG);)
 	@docker logout
 			
