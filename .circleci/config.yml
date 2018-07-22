@@ -14,7 +14,7 @@ jobs:
           command: make onos
       - run:
           name: Push base onos image
-          command: make DOCKERHUB_PASS=$DOCKERHUB_PASS push chrisioa/myonosbase
+          command:  docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS && docker push -chrisioa/myonosbase
 
   build_amd64:
     <<: *defaults
