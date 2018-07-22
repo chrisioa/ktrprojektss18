@@ -17,9 +17,7 @@ ARG VCS_REF
 ARG VCS_URL
 
 # Change to /root directory
-RUN apt-get update && \
-        apt-get install -y curl && \
-        mkdir -p /root/onos
+RUN mkdir -p /root/onos
 WORKDIR /root/onos
 
 # Install ONOS
