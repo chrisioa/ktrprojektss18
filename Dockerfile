@@ -1,4 +1,4 @@
-ARG IMAGE_TARGET=openjdk:8-jre-slim
+ARG IMAGE_TARGET=openjdk:8-jre-alpine
 #### FIRST STAGE QEMU BINARIES ####
 FROM chrisioa/myonosbase AS qemu
 ARG QEMU=x86_64
@@ -17,7 +17,7 @@ ARG VCS_REF
 ARG VCS_URL
 
 # Change to /root directory
-RUN apt-get update && apt-get install -y curl && mkdir -p /root/onos
+RUN apk update && apk add curl && mkdir -p /root/onos
 WORKDIR /root/onos
 
 # Install ONOS
