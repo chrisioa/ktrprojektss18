@@ -1,5 +1,5 @@
-ARCHITECTURES = amd64 arm32v6
-IMAGE_TARGET = openjdk:8-jre-alpine
+ARCHITECTURES = amd64 arm32v7
+IMAGE_TARGET = openjdk:8-jre-slim
 MULTIARCH = multiarch/qemu-user-static:register
 QEMU_VERSION = v2.11.0
 VERSION = $(shell cat VERSION)
