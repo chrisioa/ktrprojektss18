@@ -37,6 +37,9 @@ jobs:
       - run:
           name: Build image for arm32v7
           command: make ARCHITECTURES=arm32v7
+      - run:
+          name: Test image arm32v7
+          command: make ARCHITECTURES=arm32v7 test
       - deploy:
           name: Push image for arm32v7 to dockerhub
           command: docker login -u "$DOCKERHUB_USER" -p "$DOCKERHUB_PASS" && make ARCHITECTURES=arm32v7 push
