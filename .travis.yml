@@ -38,4 +38,3 @@ jobs:
       
 after_success:
   - docker logout
-
