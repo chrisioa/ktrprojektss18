@@ -9,7 +9,7 @@ ENV BUILD_NUMBER docker
 ENV JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 
 # Copy in the source
-RUN apt-get update && apt-get install -y git && mkdir /src && cd /src/ && git clone https://gerrit.onosproject.org/onos
+RUN apt-get update && apt-get install -y git && mkdir /src && cd /src/ && git clone --branch 1.13.2 https://github.com/opennetworkinglab/onos.git
 COPY onosApp/ioannidis.onosApp /src/onos/apps/project.ioannidis.onosApp
 WORKDIR /src/onos
 RUN awk '/ONOS_APPS =/ { print; print "'\''//apps/project.ioannidis.onosApp:onos-apps-project.ioannidis.onosApp-oar'\'',"; next }1' /src/onos/modules.defs > temp.txt &&  mv temp.txt /src/onos/modules.defs 
