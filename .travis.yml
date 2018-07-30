@@ -1,0 +1,42 @@
+sudo: required
+services:
+  - docker
+#Update to the latest version
+addons:
+  apt:
+    packages:
+      - docker-ce
+
+before_install:
+  - DOCKERHUB_USER=chrisioa
+  - CI_REGISTRY=docker.io
+  - CI_REGISTRY_IMAGE=docker.io/chrisia/myonos
+  - apk add make git
+  - docker login -u $DOCKERHUB_USER -p $CI_REGISTRY_PASSWORD_DOCKERHUB
+  
+#Setup execution stages
+jobs:
+  include:
+    - stage: build_onos
+      script:  
+        - echo "Building onos"
+        - make onos
+        - docker push chrisioa/myonosbase
+    
+    - stage: build
+      script:
+        - make ARCHITECTURES=amd64
+        - make ARCHITECTURES=amd64 test
+        - make ARCHITECTURES=amd64 push
+      
+      script:
+        - make ARCHITECTURES=arm32v7
+        - make ARCHITECTURES=arm32v7 push 
+    
+    - stage: manifest
+      script: 
+        - make manifest
+      
+after_success:
+  - docker logout
+
