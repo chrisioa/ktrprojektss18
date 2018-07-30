@@ -28,9 +28,9 @@ jobs:
         - make ARCHITECTURES=amd64 test
         - make ARCHITECTURES=amd64 push
       
-      script:
-        - make ARCHITECTURES=arm32v7
-        - make ARCHITECTURES=arm32v7 push 
+    - script:
+      - make ARCHITECTURES=arm32v7
+      - make ARCHITECTURES=arm32v7 push 
     
     - stage: manifest
       script: 
