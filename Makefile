@@ -1,14 +1,14 @@
+### Standard target architectures:
 ARCHITECTURES = amd64 arm32v7
+### This image will be used for the onos runtime:
 IMAGE_TARGET = openjdk:8-jre-slim
+### Quemu specific args:
 MULTIARCH = multiarch/qemu-user-static:register
 QEMU_VERSION = v2.11.0
+### Version / Tag of the image
 VERSION = $(shell cat VERSION)
-DOCKERHUB_USER=chrisioa
-DOCKERHUB_PASS=test
-CI_REGISTRY=docker.io
-CI_REGISTRY_IMAGE=docker.io/chrisia/myonos
-  
 
+### Check if REPO and TAG are set
 ifeq ($(REPO),)
   REPO = chrisioa/myonos
 endif
@@ -29,7 +29,6 @@ $(ARCHITECTURES):
 			--build-arg BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ") \
 			--build-arg VCS_REF=$(shell git rev-parse --short HEAD) \
 			--build-arg VCS_URL=$(shell git config --get remote.origin.url) \
-			--build-arg VERSION=$(VERSION) \
 			-t $(REPO):linux-$@-$(TAG) .
 
 
@@ -44,8 +43,8 @@ push:
 			
 test:
 	@docker run -e ONOS_APPS=openflow,pathpainter,project.ioannidis.onosApp -d --rm --name onos -p 6653 -p 6640 -p 8181 -p 8101 -p 9876  chrisioa/myonos:linux-amd64-$(VERSION)
-	@sleep 15
-	@for i in 1 2 3 4 5; do if docker exec onos /root/onos/bin/onos-app localhost list | grep -oE project.ioannidis.onosApp/."{1,20}"/xml/features\",\"state\":\"ACTIVE\"; then echo "Success" && break; elif [ $$i -eq 5 ]; then echo "Test Failed" && exit 42; else echo "Not found, trying again..." && sleep 10; fi || sleep 10; done
+	@sleep 20
+	@for i in 1 2 3 4 5 6 7 8 9 10; do if docker exec onos /root/onos/bin/onos-app localhost list | grep -oE project.ioannidis.onosApp/."{1,20}"/xml/features\",\"state\":\"ACTIVE\"; then echo "Success" && break; elif [ $$i -eq 5 ]; then echo "Test Failed" && exit 42; else echo "Not found, trying again..." && sleep 10; fi || sleep 10; done
 	@docker container stop onos
 	
 		

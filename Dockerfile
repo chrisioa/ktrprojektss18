@@ -1,8 +1,10 @@
+#### Default Image, overwritten and set in makefile
 ARG IMAGE_TARGET=openjdk:8-jre-slim
-#### FIRST STAGE QEMU BINARIES ####
+
+#### FIRST STAGE QEMU AND ONOS BINARIES ####
 FROM chrisioa/myonosbase AS qemu
-ARG QEMU=x86_64
 ARG QEMU_VERSION=v2.12.0
+ARG QEMU=x86_64
 RUN echo QEMU
 ADD https://github.com/multiarch/qemu-user-static/releases/download/${QEMU_VERSION}/qemu-${QEMU}-static /qemu-${QEMU}-static
 RUN chmod +x /qemu-${QEMU}-static
@@ -11,10 +13,6 @@ RUN chmod +x /qemu-${QEMU}-static
 FROM ${IMAGE_TARGET}
 ARG QEMU=x86_64
 COPY --from=qemu /qemu-${QEMU}-static /usr/bin/
-ARG ARCH=amd64
-ARG BUILD_DATE
-ARG VCS_REF
-ARG VCS_URL
 
 # Change to /root directory
 RUN apt-get update && apt-get install -y curl && mkdir -p /root/onos
