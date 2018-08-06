@@ -1,6 +1,6 @@
 ARG DISTRIBUTION_TARGET=alpine
 ARG BUILD_TARGET=openjdk:8-slim
-#### Taken from official onosproject github and inserted commands to inject custom app TODO: Attribution, Readme, etc. ####
+#### Taken from official onosproject github and inserted commands to inject custom app
 # First stage is the build environment
 FROM ${BUILD_TARGET} as builder
 
@@ -37,4 +37,4 @@ WORKDIR /root/onos
 
 # Copy ONOS binaries
 COPY --from=builder /src/tar/ .
-RUN ls -la && du -hcs
+
