@@ -29,10 +29,10 @@ jobs:
         - make ARCHITECTURES=amd64
         - make ARCHITECTURES=amd64 test
         - make ARCHITECTURES=amd64 push
-      name: Build arm32v7
     - script:
       - make ARCHITECTURES=arm32v7
       - make ARCHITECTURES=arm32v7 push 
+      name: Build arm32v7
     
     - stage: manifest
       name: Docker manifest
