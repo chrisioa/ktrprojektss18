@@ -1,10 +1,10 @@
 #### Default Image, overwritten and set in makefile
 ARG IMAGE_TARGET=openjdk:8-jre-slim
 
-#### FIRST STAGE QEMU AND ONOS BINARIES ####
-FROM chrisioa/myonosbase AS qemu
-ARG QEMU_VERSION=v2.12.0
+#### FIRST STAGE QEMU BINARIES ####
+FROM chrisioa/myonosbase:quick AS qemu
 ARG QEMU=x86_64
+ARG QEMU_VERSION=v2.12.0
 RUN echo QEMU
 ADD https://github.com/multiarch/qemu-user-static/releases/download/${QEMU_VERSION}/qemu-${QEMU}-static /qemu-${QEMU}-static
 RUN chmod +x /qemu-${QEMU}-static
@@ -20,6 +20,7 @@ WORKDIR /root/onos
 
 # Install ONOS
 COPY --from=qemu /root/onos/ .
+RUN ["chmod", "+x", "/root/onos/project.ioannidis.onosApp/startupAndInstall"]
 
 # Configure ONOS to log to stdout
 RUN sed -ibak '/log4j.rootLogger=/s/$/, stdout/' $(ls -d apache-karaf-*)/etc/org.ops4j.pax.logging.cfg
@@ -40,5 +41,4 @@ LABEL org.label-schema.name="ONOS" \
 EXPOSE 6653 6640 8181 8101 9876
 
 # Get ready to run command
-ENTRYPOINT ["./bin/onos-service"]
-CMD ["server"]
+ENTRYPOINT ["/root/onos/project.ioannidis.onosApp/startupAndInstall"]

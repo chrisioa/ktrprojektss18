@@ -1,40 +1,44 @@
-ARG DISTRIBUTION_TARGET=alpine
-ARG BUILD_TARGET=openjdk:8-slim
-#### Taken from official onosproject github and inserted commands to inject custom app
-# First stage is the build environment
-FROM ${BUILD_TARGET} as builder
+ARG IMAGE_TARGET=alpine
+#### Taken from official onosproject github and inserted commands to inject custom app TODO: Attribution, Readme, etc. ####
+# First stage is the provider for compiled onos
+FROM onosproject/onos:1.13.2 as provider
 
-# Set the environment variables
-ENV HOME /root
-ENV BUILD_NUMBER docker
-ENV JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
+#### Second stage is the vessel for distribution ####
+FROM ${IMAGE_TARGET}
 
-# Copy in the source
-RUN apt-get update && apt-get install -y git && mkdir /src && cd /src/ && git clone --branch 1.13.2 https://github.com/opennetworkinglab/onos.git
-COPY onosApp/ioannidis.onosApp /src/onos/apps/project.ioannidis.onosApp
-WORKDIR /src/onos
-RUN awk '/ONOS_APPS =/ { print; print "'\''//apps/project.ioannidis.onosApp:onos-apps-project.ioannidis.onosApp-oar'\'',"; next }1' /src/onos/modules.defs > temp.txt &&  mv temp.txt /src/onos/modules.defs 
-# Build ONOS
-# We extract the tar in the build environment to avoid having to put the tar
-# in the runtime environment - this saves a lot of space
-# FIXME - dependence on ONOS_ROOT and git at build time is a hack to work around
-# build problems
-RUN apt-get install -y curl zip python git bzip2 && \
-        export ONOS_ROOT=/src/onos && \
-        /src/onos/tools/build/onos-buck build onos && \
-        mkdir -p /src/tar && \
-        cd /src/tar && \
-        tar -xf /src/onos/buck-out/gen/tools/package/onos-package/onos.tar.gz --strip-components=1 && \
-        rm -rf /src/onos/buck-out .git
-
-#### SECOND STAGE IS THE VESSEL FOR DISTRIBUTION - Will be used to build for different architectures and is unusable per se####
-FROM ${DISTRIBUTION_TARGET}
-
-# Change to /root directory
-RUN mkdir -p /root/onos
+# Change to /root directory, install jdk and maven
+RUN apk update && \
+        apk add curl && \
+        apk add --no-cache openjdk8 && \
+        apk add --no-cache maven && \
+        apk add --update bash && rm -rf /var/cache/apk/* && \
+        mkdir -p /root/onos
 WORKDIR /root/onos
 
+# Install ONOS
+COPY --from=provider /root/onos/ .
+# Install and compile custom app
+COPY onosApp/ioannidis.onosApp /root/onos/project.ioannidis.onosApp/
+RUN cd /root/onos/project.ioannidis.onosApp && mvn clean install
+RUN ["chmod", "+x", "/root/onos/project.ioannidis.onosApp/startupAndInstall"]
 
-# Copy ONOS binaries
-COPY --from=builder /src/tar/ .
+# Configure ONOS to log to stdout
+RUN sed -ibak '/log4j.rootLogger=/s/$/, stdout/' $(ls -d apache-karaf-*)/etc/org.ops4j.pax.logging.cfg
 
+LABEL org.label-schema.name="ONOS" \
+      org.label-schema.description="SDN Controller" \
+      org.label-schema.usage="http://wiki.onosproject.org" \
+      org.label-schema.url="http://onosproject.org" \
+      org.label-scheme.vendor="Open Networking Foundation" \
+      org.label-schema.schema-version="1.0"
+
+# Ports
+# 6653 - OpenFlow
+# 6640 - OVSDB
+# 8181 - GUI
+# 8101 - ONOS CLI
+# 9876 - ONOS intra-cluster communication
+EXPOSE 6653 6640 8181 8101 9876
+
+# Get ready to run command
+ENTRYPOINT ["/root/onos/project.ioannidis.onosApp/startupAndInstall"]

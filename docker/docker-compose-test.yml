@@ -9,7 +9,7 @@ networks:
 
 services:
   onos:
-    image: chrisioa/myonos:0.0.1 
+    image: chrisioa/myonos:linux-amd64-0.0.1 
     ports:
       # 6653 - OpenFlow
       - "6653:6653"

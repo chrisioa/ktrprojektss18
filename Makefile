@@ -33,7 +33,7 @@ $(ARCHITECTURES):
 
 
 onos:
-	@docker build -f onosDockerfile -t chrisioa/myonosbase .
+	@docker build -f onosDockerfile -t chrisioa/myonosbase:quick .
 
 
 
@@ -42,11 +42,11 @@ push:
 	@$(foreach arch,$(ARCHITECTURES), docker push $(REPO):linux-$(arch)-$(TAG);)
 			
 test:
-	@docker run -e ONOS_APPS=openflow,pathpainter,project.ioannidis.onosApp -d --rm --name onos -p 6653 -p 6640 -p 8181 -p 8101 -p 9876  chrisioa/myonos:linux-amd64-$(VERSION)
+	@docker run -d --rm --name onos -p 6653 -p 6640 -p 8181 -p 8101 -p 9876  chrisioa/myonos:linux-amd64-$(VERSION)
 	@sleep 20
-	@for i in 1 2 3 4 5 6 7 8 9 10; do if docker exec onos /root/onos/bin/onos-app localhost list | grep -oE project.ioannidis.onosApp/."{1,20}"/xml/features\",\"state\":\"ACTIVE\"; then echo "Success" && break; elif [ $$i -eq 5 ]; then echo "Test Failed" && exit 42; else echo "Not found, trying again..." && sleep 10; fi || sleep 10; done
+	@for i in 1 2 3 4 5 6 7 8 9 10; do if docker exec onos /root/onos/bin/onos-app localhost list | grep project.ioannidis.onosApp/$(VERSION)/xml/features\",\"state\":\"ACTIVE\"; then echo "Success" && break; elif [ $$i -eq 10 ]; then echo "Test Failed" && exit 42; else echo "Not found, trying again..." && sleep 10; fi || sleep 10; done
 	@docker container stop onos
-	
+
 		
 manifest:
 	@wget -O dockermanifest https://6582-88013053-gh.circle-artifacts.com/1/work/build/docker-linux-amd64
@@ -73,4 +73,3 @@ endef
 define convert_variants
 	$(shell echo $(1) | sed -e "s|amd64|--arch amd64|g" -e "s|i386|--arch 386|g" -e "s|arm32v5|--arch arm --variant v5|g" -e "s|arm32v6|--arch arm --variant v6|g" -e "s|arm32v7|--arch arm --variant v7|g" -e "s|arm64v8|--arch arm64 --variant v8|g" -e "s|ppc64le|--arch ppc64le|g" -e "s|s390x|--arch s390x|g")
 endef
-
