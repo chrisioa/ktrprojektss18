@@ -17,22 +17,25 @@ before_install:
 jobs:
   include:
     - stage: build_onos
+      name: Build ONOS
       script:  
         - echo "Building onos"
         - make onos
         - docker push chrisioa/myonosbase
     
     - stage: build
+      name: Build amd64
       script:
         - make ARCHITECTURES=amd64
         - make ARCHITECTURES=amd64 test
         - make ARCHITECTURES=amd64 push
-      
+      name: Build arm32v7
     - script:
       - make ARCHITECTURES=arm32v7
       - make ARCHITECTURES=arm32v7 push 
     
     - stage: manifest
+      name: Docker manifest
       script: 
         - make manifest
       
