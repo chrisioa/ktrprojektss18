@@ -15,10 +15,6 @@ COPY onosApp/ioannidis.onosApp /src/onos/apps/project.ioannidis.onosApp
 WORKDIR /src/onos
 RUN awk '/ONOS_APPS =/ { print; print "'\''//apps/project.ioannidis.onosApp:onos-apps-project.ioannidis.onosApp-oar'\'',"; next }1' /src/onos/modules.defs > temp.txt &&  mv temp.txt /src/onos/modules.defs 
 # Build ONOS
-# We extract the tar in the build environment to avoid having to put the tar
-# in the runtime environment - this saves a lot of space
-# FIXME - dependence on ONOS_ROOT and git at build time is a hack to work around
-# build problems
 RUN apt-get install -y curl zip python git bzip2 && \
         export ONOS_ROOT=/src/onos && \
         /src/onos/tools/build/onos-buck build onos && \
