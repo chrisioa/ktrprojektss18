@@ -12,6 +12,21 @@ before_install:
   - CI_REGISTRY=docker.io
   - CI_REGISTRY_IMAGE=docker.io/chrisia/myonos
   - docker login -u $DOCKERHUB_USER -p $CI_REGISTRY_PASSWORD_DOCKERHUB
+
+save_docker_cache: &save_docker_cache
+  save_cache:
+    key: compiled-{{ .Revision }}
+    paths: docker-cache
+
+restore_docker_cache: &restore_docker_cache
+  restore_cache:
+    key: compiled-{{ .Revision }}
+
+load_image_from_cache: &load_image_from_cache
+  run:
+    name: Load docker image from cache
+command: docker load < docker-cache/myonosbase.tar
+
   
 #Setup execution stages
 jobs:
@@ -21,15 +36,21 @@ jobs:
       script:  
         - echo "Building onos"
         - make onos
-        - docker push chrisioa/myonosbase
+        - mkdir -p docker-cache
+        - docker save -o docker-cache/myonosbase.tar myonosbase
+        - *save_docker_cache
     
     - stage: build
       name: Build amd64
       script:
+        - *restore_docker_cache
+        - *load_image_from_cache
         - make ARCHITECTURES=amd64
         - make ARCHITECTURES=amd64 test
         - make ARCHITECTURES=amd64 push
     - script:
+      - *restore_docker_cache
+      - *load_image_from_cache
       - make ARCHITECTURES=arm32v7
       - make ARCHITECTURES=arm32v7 push 
       name: Build arm32v7
