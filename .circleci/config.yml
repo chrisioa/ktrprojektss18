@@ -3,6 +3,19 @@ defaults: &defaults
   working_directory: ~/myonos
   machine: true
 
+save_docker_cache: &save_docker_cache
+  save_cache:
+    key: compiled-{{ .Revision }}
+    paths: docker-cache
+
+restore_docker_cache: &restore_docker_cache
+  restore_cache:
+    key: compiled-{{ .Revision }}
+
+load_image_from_cache: &load_image_from_cache
+  run:
+    name: Load docker image from cache
+command: docker load < docker-cache/base.tar
 
 jobs:
   build:
@@ -13,13 +26,18 @@ jobs:
           name: Build base onos image
           command: make onos
       - run:
-          name: Push
-          command:  docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS && docker push chrisioa/myonosbase
+          name: Save Cache
+          command: |
+            docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+            docker save -o docker-cache/base.tar base
+      - *save_docker_cache
 
   build_amd64:
     <<: *defaults
     steps:
       - checkout
+      - *restore_docker_cache
+      - *load_image_from_cache
       - run:
           name: Build image for amd64
           command: make ARCHITECTURES=amd64
@@ -34,6 +52,8 @@ jobs:
     <<: *defaults
     steps:
       - checkout
+      - *restore_docker_cache
+      - *load_image_from_cache
       - run:
           name: Build image for arm32v7
           command: make ARCHITECTURES=arm32v7

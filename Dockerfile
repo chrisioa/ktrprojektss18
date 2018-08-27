@@ -11,8 +11,8 @@ RUN chmod +x /qemu-${QEMU}-static
 
 #### SECOND STAGE IS THE RUNTIME ENVIRONMENT ####
 FROM ${IMAGE_TARGET}
-ARG QEMU=x86_64
-COPY --from=qemu /qemu-${QEMU}-static /usr/bin/
+
+COPY --from=qemu /qemu-${QEMU}-static /usr/bin/qemu-${QEMU}-static
 
 # Change to /root directory
 RUN apt-get update && apt-get install -y curl && mkdir -p /root/onos
