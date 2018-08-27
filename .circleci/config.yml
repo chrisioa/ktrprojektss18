@@ -36,8 +36,9 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - *restore_docker_cache
-      - *load_image_from_cache
+      - run:
+          name: Restore Cache
+          command: *restore_docker_cache && *load_image_from_cache
       - run:
           name: Build image for amd64
           command: make ARCHITECTURES=amd64
@@ -52,8 +53,9 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - *restore_docker_cache
-      - *load_image_from_cache
+      - run:
+          name: Restore Cache
+          command: *restore_docker_cache && *load_image_from_cache
       - run:
           name: Build image for arm32v7
           command: make ARCHITECTURES=arm32v7
