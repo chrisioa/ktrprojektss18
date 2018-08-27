@@ -29,7 +29,7 @@ jobs:
           name: Save Cache
           command: |
             docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-            docker save -o docker-cache/myonosbase.tar myonosbase
+            docker save -o docker-cache/myonosbase.tar chrisioa/myonosbase
       - *save_docker_cache
 
   build_amd64:

@@ -37,7 +37,7 @@ jobs:
         - echo "Building onos"
         - make onos
         - mkdir -p docker-cache
-        - docker save -o docker-cache/myonosbase.tar myonosbase
+        - docker save -o docker-cache/myonosbase.tar chrisioa/myonosbase
         - *save_docker_cache
     
     - stage: build
