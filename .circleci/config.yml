@@ -24,7 +24,7 @@ jobs:
       - checkout
       - run:
           name: Build base onos image
-          command: make onos
+          command: make onos && mkdir -p docker-cache
       - run:
           name: Save Cache
           command: |
