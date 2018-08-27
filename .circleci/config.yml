@@ -31,7 +31,6 @@ jobs:
             docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
             docker save -o docker-cache/myonosbase.tar chrisioa/myonosbase
       - *save_docker_cache
-
   build_amd64:
     <<: *defaults
     steps:
@@ -47,7 +46,6 @@ jobs:
       - deploy:
           name: Push image for amd64 to dockerhub
           command: docker login -u "$DOCKERHUB_USER" -p $DOCKERHUB_PASS && make ARCHITECTURES=amd64 push
-  
   build_arm32v7:
     <<: *defaults
     steps:
@@ -60,7 +58,6 @@ jobs:
       - deploy:
           name: Push image for arm32v7 to dockerhub
           command: docker login -u "$DOCKERHUB_USER" -p "$DOCKERHUB_PASS" && make ARCHITECTURES=arm32v7 push
-
   manifest:
     <<: *defaults
     steps:
