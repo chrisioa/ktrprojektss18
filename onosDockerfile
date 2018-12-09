@@ -1,6 +1,6 @@
 ARG DISTRIBUTION_TARGET=alpine
 ARG BUILD_TARGET=openjdk:8-slim
-#### Taken from official onosproject github and inserted commands to inject custom app
+#### Taken from official onosproject github and inserted commands to inject custom app ####
 # First stage is the build environment
 FROM ${BUILD_TARGET} as builder
 
@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y git && mkdir /src && cd /src/ && git cl
 COPY onosApp/ioannidis.onosApp /src/onos/apps/project.ioannidis.onosApp
 WORKDIR /src/onos
 RUN awk '/ONOS_APPS =/ { print; print "'\''//apps/project.ioannidis.onosApp:onos-apps-project.ioannidis.onosApp-oar'\'',"; next }1' /src/onos/modules.defs > temp.txt &&  mv temp.txt /src/onos/modules.defs 
+
 # Build ONOS
 RUN apt-get install -y curl zip python git bzip2 && \
         export ONOS_ROOT=/src/onos && \
@@ -33,4 +34,3 @@ WORKDIR /root/onos
 
 # Copy ONOS binaries
 COPY --from=builder /src/tar/ .
-

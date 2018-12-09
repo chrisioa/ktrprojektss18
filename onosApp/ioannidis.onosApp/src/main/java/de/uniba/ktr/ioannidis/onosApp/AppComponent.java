@@ -21,10 +21,8 @@ import org.onlab.packet.IPv4;
 import org.onlab.packet.TpPort;
 import org.onosproject.core.ApplicationId;
 import org.onosproject.core.CoreService;
-import org.onosproject.net.DeviceId;
-import org.onosproject.net.Host;
-import org.onosproject.net.HostId;
-import org.onosproject.net.PortNumber;
+import org.onosproject.net.*;
+import org.onosproject.net.device.DeviceService;
 import org.onosproject.net.flow.*;
 import org.onosproject.net.flow.criteria.PiCriterion;
 import org.onosproject.net.flow.instructions.Instruction;
@@ -43,6 +41,7 @@ import org.onosproject.net.topology.TopologyService;
 import org.slf4j.Logger;
 
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -76,6 +75,10 @@ public class AppComponent {
     @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
     protected FlowObjectiveService flowObjectiveService;
 
+    @Reference(cardinality = ReferenceCardinality.MANDATORY_UNARY)
+    protected DeviceService deviceService;
+
+    private static final ReentrantLock lock = new ReentrantLock();
     private ReactivePacketProcessor processor = new ReactivePacketProcessor();
     private ApplicationId appId;
 
@@ -99,7 +102,6 @@ public class AppComponent {
         selector.matchEthType(Ethernet.TYPE_IPV4);
 
 
-        //TODO: REACTIVE is desired, but then intents cannot be withdrawn, since the dns packets don't reach this app - request only dns?
         packetService.requestPackets(selector.build(), PacketPriority.REACTIVE, appId);
         log.info("Started");
     }
@@ -135,14 +137,14 @@ public class AppComponent {
                 flood(context);
                 return;
             }
-
+            /*
             //Allow all ARP by flooding
             if (ethPkt.getEtherType() == Ethernet.TYPE_ARP) {
                 log.info("Flooding ARP from " + srcId + " to " + dstId);
                 flood(context);
                 return;
             }
-
+            */
             //Check for our cookies/messages and install/withdraw intent
             boolean cookieFoundOn = search(pkt.unparsed().array(), magicCookieOn);
             boolean cookieFoundOff = search(pkt.unparsed().array(), magicCookieOff);
@@ -161,12 +163,7 @@ public class AppComponent {
 
             if (cookieFoundOn) {
                 log.info("--- AllowTraffic - Cookie was found, setting up intent between: " + srcId + " and " + dstId + "\n");
-                log.info("Payload 1: " + ethPkt.getPayload().toString());
-                log.info("Payload 2: " + ethPkt.getPayload().getPayload().toString());
-                log.info("Payload 3: " + ethPkt.getPayload().getPayload().getPayload().toString());
-
                 setUpConnectivity(context, srcId, dstId);
-
             }
         }
 
@@ -176,13 +173,15 @@ public class AppComponent {
          * @param srcId Source Id of the intent
          * @param dstId Destination Id of the intent
          */
-        private void blockConnectivity(HostId srcId, HostId dstId) {
+        public void blockConnectivity(HostId srcId, HostId dstId) {
             Key key = getKey(srcId, dstId);
+            lock.lock();
             HostToHostIntent intent = (HostToHostIntent) intentService.getIntent(key);
             IntentState state = intentService.getIntentState(key);
             if (intent != null && state == IntentState.INSTALLED) {
                 intentService.withdraw(intent);
             }
+            lock.unlock();
         }
 
         /**
@@ -206,13 +205,12 @@ public class AppComponent {
 
 
         /**
-         * Looks for a byte array (needle) in another byte array (haystack)
+         * Looks for a byte array (needle) in another byte array (haystack). Adapted from : https://codereview.stackexchange.com/questions/46220/find-byte-in-byte-with-java
          *
          * @param haystack
          * @param needle
          * @return true if needle in haystack
          */
-        //TODO: Attribution / reworking
         public boolean search(byte[] haystack, byte[] needle) {
             //convert byte[] to Byte[]
             Byte[] searchedForB = new Byte[needle.length];
@@ -285,23 +283,23 @@ public class AppComponent {
 
 
     /**
-     * Sets up intetns between source and destination hosts for following communication. Checks for and deals with existence of intent, Failed/Withdrawn states.
+     * Sets up intents between source and destination hosts for following communication. Checks for and deals with existence of intent, Failed/Withdrawn states.
      *
      * @param context
      * @param srcId
      * @param dstId
      */
-    private void setUpConnectivity(PacketContext context, HostId srcId, HostId dstId) {
+    public void setUpConnectivity(PacketContext context, HostId srcId, HostId dstId) {
+        log.info("Setting up intent between: " + srcId + " and " + dstId);
         TrafficSelector.Builder selector = DefaultTrafficSelector.builder();
         TrafficTreatment treatment = DefaultTrafficTreatment.emptyTreatment();
-
-        openBackChannel(context);
-
+        // Needed to be able to withdraw intent via dig / dns
         Key key = getKey(srcId, dstId);
+        lock.lock();
         HostToHostIntent intent = (HostToHostIntent) intentService.getIntent(key);
-        // TODO handle the FAILED state
         if (intent != null) {
             if (WITHDRAWN_STATES.contains(intentService.getIntentState(key))) {
+
                 HostToHostIntent hostIntent = HostToHostIntent.builder()
                         .appId(appId)
                         .key(key)
@@ -310,7 +308,7 @@ public class AppComponent {
                         .selector(selector.build())
                         .treatment(treatment)
                         .build();
-
+                openBackChannel(context);
                 intentService.submit(hostIntent);
             } else if (intentService.getIntentState(key) == IntentState.FAILED) {
 
@@ -341,15 +339,16 @@ public class AppComponent {
                     .selector(selector.build())
                     .treatment(treatment)
                     .build();
-
+            openBackChannel(context);
             intentService.submit(hostIntent);
         }
+        lock.unlock();
 
     }
 
     /**
      * This method establishes a flow from the device where the packet that triggered an intent creation came from, to
-     * the controller with a priorityy higher than the other intents. The selector matches udp packets with dst port 53,
+     * the controller with a priority higher than the other intents. The selector matches udp packets with dst port 53,
      * this should target dns packets only that are used for intent setup and teardown.
      *
      * @param context
@@ -365,14 +364,8 @@ public class AppComponent {
         selector.matchIPProtocol(IPv4.PROTOCOL_UDP);
         selector.matchUdpDst(TpPort.tpPort(53));
         //Match port
-        log.info("PORT OF INCOMING PACKET : " + context.inPacket().receivedFrom().port());
-        selector.matchInPort(context.inPacket().receivedFrom().port());
         selector.matchEthSrc(context.inPacket().parsed().getSourceMAC());
-        /*
-        selector.matchUdpSrc(TpPort.tpPort(53));
-        selector.matchUdpDst(TpPort.tpPort(853));
-        selector.matchUdpSrc(TpPort.tpPort(853));
-        */
+
 
         //Match port of incoming packet
         selector.matchInPort(context.inPacket().receivedFrom().port());
@@ -380,17 +373,55 @@ public class AppComponent {
 
         //Install Flow in device the package came from, this should be the one closest to the host,
         //the priority must be highest in the table of the device
-        FlowRule flowRule = DefaultFlowRule.builder()
+        HostId srcId = HostId.hostId(context.inPacket().parsed().getSourceMAC());
+        DeviceId srcDevice = getDeviceHostIsConnectedTo(srcId);
+        FlowRule flowRuleSource = DefaultFlowRule.builder()
                 .withSelector(selector.build())
                 .withTreatment(treatment.build())
-                .forDevice(context.inPacket().receivedFrom().deviceId())
+                .forDevice(srcDevice)
                 .withPriority(40001)
                 .makePermanent()
                 .fromApp(appId)
                 .build();
 
-        flowRuleService.applyFlowRules(flowRule);
+        //Info on Destination device/host of the intent request
+        HostId dstId = HostId.hostId(context.inPacket().parsed().getDestinationMAC());
+        DeviceId dstDevice = getDeviceHostIsConnectedTo(dstId);
 
+        //Match port of incoming packet, from dstHost at dstDevice
+        PortNumber dstPort = hostService.getHost(dstId).location().port();
+        //Update Selector with correct info
+        selector.matchInPort(dstPort);
+        selector.matchEthSrc(dstId.mac());
+
+        FlowRule flowRuleDst = DefaultFlowRule.builder()
+                .withSelector(selector.build())
+                .withTreatment(treatment.build())
+                .forDevice(dstDevice)
+                .withPriority(40001)
+                .makePermanent()
+                .fromApp(appId)
+                .build();
+
+        flowRuleService.applyFlowRules(flowRuleSource, flowRuleDst);
+
+    }
+
+    /**
+     * Look for the switch/device id that the host is connected to, returns null if none is found.
+     *
+     * @param hostId
+     * @return DeviceId the host is connected to
+     */
+    private DeviceId getDeviceHostIsConnectedTo(HostId hostId) {
+        for (Device currentDevice : deviceService.getDevices()) {
+            for (Host host : hostService.getConnectedHosts(currentDevice.id())) {
+                if (host.id().mac().equals(hostId.mac())) {
+                    return currentDevice.id();
+                }
+            }
+        }
+        return null;
     }
 
     /**

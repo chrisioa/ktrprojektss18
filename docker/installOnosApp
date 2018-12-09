@@ -1,5 +1,5 @@
 #!/bin/bash
-cp ../onosApp/ioannidis.onosApp/target/ioannidis.onosApp-0.0.1.oar rundata/onos/data/ioannidis.onosApp-0.0.1.oar
+cp ../onosApp/ioannidis.onosApp/target/project.ioannidis.onosApp-0.0.1.oar rundata/onos/data/ioannidis.onosApp-0.0.1.oar
 #
 docker exec docker_onos_1 /root/onos/bin/onos-app 192.168.16.99 install /data/ioannidis.onosApp-0.0.1.oar 
 #If already installed

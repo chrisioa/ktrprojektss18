@@ -1,5 +1,5 @@
 ### Standard target architectures:
-ARCHITECTURES = amd64 arm32v7
+ARCHITECTURES = amd64 arm32v7 arm64v8
 ### This image will be used for the onos runtime:
 IMAGE_TARGET = openjdk:8-jre-slim
 ### Quemu specific args:
@@ -43,8 +43,8 @@ push:
 			
 test:
 	@docker run -e ONOS_APPS=openflow,pathpainter,project.ioannidis.onosApp -d --rm --name onos -p 6653 -p 6640 -p 8181 -p 8101 -p 9876  chrisioa/myonos:linux-amd64-$(VERSION)
-	@sleep 20
-	@for i in 1 2 3 4 5 6 7 8 9 10; do if docker exec onos /root/onos/bin/onos-app localhost list | grep -oE project.ioannidis.onosApp/."{1,20}"/xml/features\",\"state\":\"ACTIVE\"; then echo "Success" && break; elif [ $$i -eq 5 ]; then echo "Test Failed" && exit 42; else echo "Not found, trying again..." && sleep 20; fi || sleep 10; done
+	@sleep 25
+	@for i in 1 2 3 4 5 6 7 8 9 10; do if docker exec onos /root/onos/bin/onos-app localhost list | grep -oE project.ioannidis.onosApp/."{1,20}"/xml/features\",\"state\":\"ACTIVE\"; then echo "Success" && break; elif [ $$i -eq 10 ]; then echo "Test Failed" && exit 42; else echo "Not found, trying again..." && sleep 20; fi || sleep 10; done
 	@docker container stop onos
 	
 		
