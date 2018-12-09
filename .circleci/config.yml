@@ -78,8 +78,11 @@ workflows:
           <<: *requires_build
       - build_arm32v7:
           <<: *requires_build
+      - build_arm64v8:
+          <<: *requires_build
       - manifest:
           requires:
             - build
             - build_amd64
             - build_arm32v7
+            - build_arm64v8
