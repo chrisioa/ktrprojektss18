@@ -58,6 +58,24 @@ jobs:
       - deploy:
           name: Push image for arm32v7 to dockerhub
           command: docker login -u "$DOCKERHUB_USER" -p "$DOCKERHUB_PASS" && make ARCHITECTURES=arm32v7 push
+  
+  build_arm64v8:
+    <<: *defaults
+    steps:
+      - checkout
+      - *restore_docker_cache
+      - *load_image_from_cache
+      - run:
+          name: Build image for arm64v8
+          command: make ARCHITECTURES=arm64v8
+      - run:
+          name: Test image for arm64v8
+          command: make ARCHITECTURES=arm64v8 test
+      - deploy:
+          name: Push image for arm64v8 to dockerhub
+          command: docker login -u "$DOCKERHUB_USER" -p $DOCKERHUB_PASS && make ARCHITECTURES=arm64v8 push
+
+  
   manifest:
     <<: *defaults
     steps:
@@ -79,8 +97,11 @@ workflows:
           <<: *requires_build
       - build_arm32v7:
           <<: *requires_build
+      - build_arm64v8:
+          <<: *requires_build
       - manifest:
           requires:
             - build
             - build_amd64
             - build_arm32v7
+            - build_arm64v8
